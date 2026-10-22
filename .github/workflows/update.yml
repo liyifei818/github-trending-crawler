@@ -42,6 +42,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "没有变化，跳过提交"
           else
-            git commit -m "chore: update trending dashboard $(date -u +%Y-%m-%d)"
+            git commit -m "chore: update trending dashboard $(date +%Y-%m-%d)"
             git push
           fi
