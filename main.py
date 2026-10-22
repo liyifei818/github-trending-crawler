@@ -299,10 +299,10 @@ def main() -> None:
 
     _print_summary(repos, stats, args.since, dropped)
 
-    if len(repos) < 10:
+    if len(repos) < 5:
         print(
-            f"\n注意：只抓到 {len(repos)} 个仓库（通常为 25 个），"
-            "可能被 GitHub 限流。稍等几分钟再试即可。"
+            f"\n注意：本次只解析到 {len(repos)} 个仓库。GitHub 有时会返回精简榜单，"
+            "也可能触发了限流；稍后重试即可。"
         )
 
     print(f"\n看板已生成：{html_path}")
