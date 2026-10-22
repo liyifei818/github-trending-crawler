@@ -11,6 +11,7 @@ venv/
 
 # 示例数据不进入真实历史（demo.html 仍保留，用于展示页面效果）
 data/demo/
+demo.xml
 
 # 本地自查产物
 _shot*.png

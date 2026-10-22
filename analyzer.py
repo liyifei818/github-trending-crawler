@@ -1,5 +1,5 @@
 """
-统计分析：语言分布、星标汇总、历史快照对比，以及 CSV 导出。
+统计分析：语言分布、增速、历史快照对比、趋势序列，以及 CSV 导出。
 仅使用 Python 标准库。
 """
 
@@ -20,19 +20,24 @@ CSV_FIELDS = [
 SINCE_LABELS = {"daily": "今日", "weekly": "本周", "monthly": "本月"}
 
 
+def _to_int(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def analyze(repos: list[dict]) -> dict:
     """汇总核心指标。"""
     lang_counter = collections.Counter(
         r["language"] for r in repos if r.get("language")
     )
-    total_stars = sum(r.get("stars") or 0 for r in repos)
-    total_period = sum(r.get("period_stars") or 0 for r in repos)
     return {
         "count": len(repos),
         "languages": lang_counter,
         "language_count": len(lang_counter),
-        "total_stars": total_stars,
-        "total_period_stars": total_period,
+        "total_stars": sum(r.get("stars") or 0 for r in repos),
+        "total_period_stars": sum(r.get("period_stars") or 0 for r in repos),
         "new_count": sum(1 for r in repos if r.get("is_new")),
         "top_by_stars": sorted(
             repos, key=lambda r: r.get("stars") or 0, reverse=True
@@ -40,7 +45,24 @@ def analyze(repos: list[dict]) -> dict:
         "top_by_period": sorted(
             repos, key=lambda r: r.get("period_stars") or 0, reverse=True
         )[:10],
+        "top_by_growth": sorted(
+            repos, key=lambda r: r.get("growth") or 0, reverse=True
+        )[:10],
     }
+
+
+def add_momentum(repos: list[dict]) -> None:
+    """计算增速：本期新增星标占现有星标的比例（0~100）。
+
+    单纯按总星标排序，老项目会永远压住新项目；增速能暴露“小体量、
+    高热度”的黑马。用现有星标做分母，避免新仓库分母趋近 0 导致数值爆炸。
+    """
+    for repo in repos:
+        stars = repo.get("stars") or 0
+        period = repo.get("period_stars") or 0
+        repo["growth"] = (
+            round(min(period * 100.0 / stars, 100.0), 2) if stars > 0 else None
+        )
 
 
 def language_breakdown(repos: list[dict], top_n: int = 8) -> list[dict]:
@@ -94,59 +116,141 @@ def write_csv(repos: list[dict], path: str) -> None:
             })
 
 
-def find_previous_csv(
-    outdir: str, since: str, today: str
-) -> tuple[str | None, str | None]:
-    """找同一周期下、日期早于 today 的最近一份 CSV 快照。"""
+def load_history(
+    outdir: str, since: str, today: str, limit: int = 30
+) -> list[dict]:
+    """读取同一周期的历史快照（日期早于 today），按日期升序返回。
+
+    每个快照形如：
+        {"date": "2026-10-22", "repos": {"owner/name": {rank, stars, ...}}}
+    """
     if not os.path.isdir(outdir):
-        return None, None
+        return []
 
     pattern = os.path.join(outdir, f"trending_{since}_*.csv")
     date_re = re.compile(
         r"trending_%s_(\d{4}-\d{2}-\d{2})\.csv$" % re.escape(since)
     )
 
-    best_path, best_date = None, None
+    entries: list[tuple[str, str]] = []
     for path in glob.glob(pattern):
-        m = date_re.search(os.path.basename(path))
-        if not m:
+        match = date_re.search(os.path.basename(path))
+        if not match:
             continue
-        date = m.group(1)
+        date = match.group(1)
         if date >= today:
             continue
-        if best_date is None or date > best_date:
-            best_path, best_date = path, date
-    return best_path, best_date
+        entries.append((date, path))
+    entries.sort()
+
+    history: list[dict] = []
+    for date, path in entries[-limit:]:
+        snapshot: dict[str, dict] = {}
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                name = (row.get("full_name") or "").strip()
+                if not name:
+                    continue
+                snapshot[name] = {
+                    "rank": _to_int(row.get("rank")),
+                    "stars": _to_int(row.get("stars")),
+                    "period_stars": _to_int(row.get("period_stars")),
+                    "language": (row.get("language") or "").strip() or None,
+                }
+        history.append({"date": date, "repos": snapshot})
+    return history
 
 
-def load_snapshot(path: str) -> dict[str, int]:
-    """读取历史快照，返回 {full_name: stars}。"""
-    stars: dict[str, int] = {}
-    with open(path, newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            name = (row.get("full_name") or "").strip()
-            if not name:
-                continue
-            try:
-                stars[name] = int(row.get("stars") or 0)
-            except (TypeError, ValueError):
-                stars[name] = 0
-    return stars
+def build_trend(history: list[dict], repos: list[dict], today: str) -> list[dict]:
+    """把历史快照 + 今天，压成画折线图用的序列。"""
+    series: list[dict] = []
+    for snapshot in history:
+        values = list(snapshot["repos"].values())
+        count = len(values)
+        total = sum(v["stars"] for v in values)
+        series.append({
+            "date": snapshot["date"],
+            "count": count,
+            "total_stars": total,
+            # 平均星标比总星标更抗名单变动（大仓库进出不会让曲线跳变）
+            "avg_stars": round(total / count) if count else 0,
+            "total_period_stars": sum(v["period_stars"] for v in values),
+        })
+
+    count = len(repos)
+    total = sum(r.get("stars") or 0 for r in repos)
+    series.append({
+        "date": today,
+        "count": count,
+        "total_stars": total,
+        "avg_stars": round(total / count) if count else 0,
+        "total_period_stars": sum(r.get("period_stars") or 0 for r in repos),
+    })
+    return series[-14:]
 
 
-def apply_history(repos: list[dict], previous: dict[str, int] | None) -> None:
-    """标注“新上榜”与“较上次的星标增量”。"""
-    for r in repos:
-        current = r.get("stars")
+def apply_history(repos: list[dict], history: list[dict]) -> None:
+    """标注：新上榜、星标增量、排名变化、连续在榜天数、累计在榜次数。"""
+    previous = history[-1]["repos"] if history else None
+
+    for repo in repos:
+        name = repo["full_name"]
+
         if previous is None:
-            r["is_new"] = None
-            r["delta_stars"] = None
-        elif r["full_name"] not in previous:
-            r["is_new"] = True
-            r["delta_stars"] = None
+            repo["is_new"] = None
+            repo["delta_stars"] = None
+            repo["rank_delta"] = None
+            repo["streak"] = None
+            repo["appearances"] = None
+            continue
+
+        info = previous.get(name)
+        if info is None:
+            repo["is_new"] = True
+            repo["delta_stars"] = None
+            repo["rank_delta"] = None
         else:
-            r["is_new"] = False
-            r["delta_stars"] = (
-                current - previous[r["full_name"]]
-                if current is not None else None
+            repo["is_new"] = False
+            current_stars = repo.get("stars")
+            repo["delta_stars"] = (
+                current_stars - info["stars"]
+                if current_stars is not None else None
             )
+            repo["rank_delta"] = (
+                info["rank"] - repo["rank"]
+                if info.get("rank") and repo.get("rank") else None
+            )
+
+        # 连续在榜天数（含今天）：从最近一天往回数
+        streak = 1
+        for snapshot in reversed(history):
+            if name in snapshot["repos"]:
+                streak += 1
+            else:
+                break
+        repo["streak"] = streak
+        repo["appearances"] = 1 + sum(
+            1 for snapshot in history if name in snapshot["repos"]
+        )
+
+
+def find_dropped(repos: list[dict], history: list[dict]) -> list[dict]:
+    """找出上次在榜、这次消失的仓库。"""
+    if not history:
+        return []
+
+    previous = history[-1]["repos"]
+    current = {r["full_name"] for r in repos}
+    dropped = [
+        {
+            "full_name": name,
+            "rank": info.get("rank"),
+            "stars": info.get("stars"),
+            "language": info.get("language"),
+            "url": f"https://github.com/{name}",
+        }
+        for name, info in previous.items()
+        if name not in current
+    ]
+    dropped.sort(key=lambda item: item.get("rank") or 9999)
+    return dropped

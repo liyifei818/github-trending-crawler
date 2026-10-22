@@ -9,32 +9,39 @@ GitHub Trending 爬虫 + 数据看板：入口脚本。
     python main.py --no-open             # 生成后不自动打开浏览器
 
 产物：
-    index.html                           可视化看板（可直接双击打开）
-    data/trending_<since>_<日期>.csv      当期明细，也是下次运行的历史基线
+    index.html                            可视化看板（可直接双击打开）
+    feed.xml                              RSS 订阅源
+    data/trending_<since>_<日期>.csv       当期明细，也是下次运行的历史基线
+    data/latest_<since>.json              机器可读的当期快照
 """
 
 from __future__ import annotations
 
 import argparse
 import datetime
+import json
 import os
 import pathlib
 import webbrowser
 
 from analyzer import (
     SINCE_LABELS,
+    add_momentum,
     analyze,
     apply_history,
-    find_previous_csv,
+    build_trend,
+    find_dropped,
     language_breakdown,
-    load_snapshot,
+    load_history,
     write_csv,
 )
 from crawler import fetch_trending
 from dashboard import render, write_html
+from feed import build_rss
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_URL = "https://github.com/liyifei818/github-trending-crawler"
+SITE_URL = "https://liyifei818.github.io/github-trending-crawler/"
 
 # 离线示例数据：(仓库, 语言, 总星标, Fork, 周期新增, 描述)
 _DEMO_ROWS = [
@@ -78,17 +85,17 @@ _DEMO_ROWS = [
      "Fair-code workflow automation platform with native AI capabilities."),
     ("kubernetes/kubernetes", "Go", 118930, 41020, 88,
      "Production-Grade Container Scheduling and Management"),
-    ("redis/redis", "C", 71480, 23910, 74,
-     "Redis is an in-memory database that persists on disk."),
+    ("karpathy/nanochat", "Python", 4120, 380, 980,
+     "The best ChatGPT that $100 can buy."),
     ("grafana/grafana", "TypeScript", 72360, 13420, 61,
      "The open and composable observability and data visualization platform."),
-    ("sveltejs/svelte", "JavaScript", 84520, 4620, 132,
-     "Cybernetically enhanced web apps"),
+    ("openbmb/MiniCPM", "Python", 8960, 1240, 610,
+     "A family of small language models that run on device."),
 ]
 
 
 def build_demo_repos() -> list[dict]:
-    """构造 25 条离线示例数据，并伪造少量历史对比字段。"""
+    """构造 25 条离线示例数据。"""
     repos: list[dict] = []
     for index, row in enumerate(_DEMO_ROWS, start=1):
         full_name, language, stars, forks, period_stars, description = row
@@ -106,39 +113,78 @@ def build_demo_repos() -> list[dict]:
             "period_stars": period_stars,
             "period": "today",
         })
-
-    # 让界面上的 NEW 徽章与“较上次”增量都有内容可展示
-    for index, repo in enumerate(repos):
-        if index in (2, 9, 16, 21):
-            repo["is_new"] = True
-            repo["delta_stars"] = None
-        else:
-            repo["is_new"] = False
-            repo["delta_stars"] = (index * 173) % 980
     return repos
 
 
-def _print_summary(repos: list[dict], stats: dict, since: str) -> None:
+def build_demo_history(repos: list[dict], days: int = 12) -> list[dict]:
+    """伪造 12 天历史，让趋势图、连续在榜、掉榜在示例页里都能看到。"""
+    history: list[dict] = []
+    today = datetime.date.today()
+    for offset in range(days, 0, -1):
+        day = (today - datetime.timedelta(days=offset)).isoformat()
+        snapshot: dict[str, dict] = {}
+        for index, repo in enumerate(repos):
+            # 每隔几天让个别仓库缺席，制造“新上榜”和“掉榜”
+            if (index * 3 + offset) % 11 == 0:
+                continue
+            current = repo.get("stars") or 0
+            period = repo.get("period_stars") or 0
+            decay = min(period * offset * 0.85, current * 0.35)
+            snapshot[repo["full_name"]] = {
+                "rank": ((index + offset) % len(repos)) + 1,
+                "stars": max(int(current - decay), 0),
+                "period_stars": max(int(period * (1 - 0.02 * offset)), 0),
+                "language": repo.get("language"),
+            }
+        # 两个“只存在于历史里”的仓库，用来展示掉榜面板
+        snapshot["vinta/awesome-python"] = {
+            "rank": 22,
+            "stars": 224000 - offset * 90,
+            "period_stars": 28,
+            "language": "Python",
+        }
+        snapshot["jwasham/coding-interview-university"] = {
+            "rank": 25,
+            "stars": 316000 - offset * 70,
+            "period_stars": 19,
+            "language": "Markdown",
+        }
+        history.append({"date": day, "repos": snapshot})
+    return history
+
+
+def _print_summary(
+    repos: list[dict], stats: dict, since: str, dropped: list[dict]
+) -> None:
     label = SINCE_LABELS.get(since, since)
-    print("\n" + "=" * 56)
+    print("\n" + "=" * 58)
     print(f"GitHub Trending · {label}榜单 · 共 {stats['count']} 个仓库")
     print(f"总星标 {stats['total_stars']:,}　周期新增 {stats['total_period_stars']:,}")
-    print("-" * 56)
+    print("-" * 58)
 
     print("语言分布 Top5：")
     for lang, count in stats["languages"].most_common(5):
-        print(f"  {lang:<16} {count}")
+        print(f"  {lang:<18} {count}")
 
     print(f"\n{label}新增星标 Top5：")
     for repo in stats["top_by_period"][:5]:
-        print(f"  {repo['full_name']:<34} +{(repo.get('period_stars') or 0):,}")
+        print(f"  {repo['full_name']:<36} +{(repo.get('period_stars') or 0):,}")
+
+    print("\n增速 Top5（本期新增 / 现有星标）：")
+    for repo in stats["top_by_growth"][:5]:
+        print(f"  {repo['full_name']:<36} {(repo.get('growth') or 0):>6.2f}%")
 
     new_repos = [r for r in repos if r.get("is_new")]
     if new_repos:
         print(f"\n新上榜 {len(new_repos)} 个：")
-        for repo in new_repos[:8]:
+        for repo in new_repos[:6]:
             print(f"  + {repo['full_name']}")
-    print("=" * 56)
+
+    if dropped:
+        print(f"\n掉榜 {len(dropped)} 个：")
+        for item in dropped[:6]:
+            print(f"  - {item['full_name']}")
+    print("=" * 58)
 
 
 def main() -> None:
@@ -153,47 +199,48 @@ def main() -> None:
     )
     parser.add_argument(
         "-o", "--outdir", default=os.path.join(BASE_DIR, "data"),
-        help="CSV 输出目录",
+        help="CSV / JSON 输出目录",
     )
     parser.add_argument("--demo", action="store_true", help="使用离线示例数据")
     parser.add_argument("--no-open", action="store_true", help="生成后不自动打开浏览器")
     args = parser.parse_args()
 
     today = datetime.date.today().isoformat()
-    prev_path: str | None = None
-    prev_date: str | None = None
 
     if args.demo:
         print("使用离线示例数据（不访问网络）…")
         repos = build_demo_repos()
-        # 示例数据单独放，避免污染真实的历史快照目录
+        history = build_demo_history(repos)
         outdir = os.path.join(BASE_DIR, "data", "demo")
         html_path = os.path.join(BASE_DIR, "demo.html")
+        rss_path = os.path.join(BASE_DIR, "demo.xml")
     else:
         outdir = args.outdir
         html_path = os.path.join(BASE_DIR, "index.html")
+        rss_path = os.path.join(BASE_DIR, "feed.xml")
         print(
             f"正在抓取 GitHub Trending（since={args.since}，"
             f"language={args.language or '全部'}）…"
         )
         repos = fetch_trending(language=args.language, since=args.since)
+        history = load_history(outdir, args.since, today)
 
-        prev_path, prev_date = find_previous_csv(outdir, args.since, today)
-        previous = load_snapshot(prev_path) if prev_path else None
-        apply_history(repos, previous)
-        if prev_date:
-            print(f"已对比历史快照：{os.path.basename(prev_path)}（{prev_date}）")
-        else:
-            print("暂无历史快照，本次不做“新上榜 / 增量”对比。")
-
+    apply_history(repos, history)
+    add_momentum(repos)
     stats = analyze(repos)
+    dropped = find_dropped(repos, history)
+    trend = build_trend(history, repos, today)
+
+    prev_date = history[-1]["date"] if history else None
+    if prev_date:
+        print(f"已对比历史快照：{prev_date}（共 {len(history)} 天）")
+    else:
+        print("暂无历史快照，本次不做“新上榜 / 增量 / 掉榜”对比。")
 
     csv_path = os.path.join(outdir, f"trending_{args.since}_{today}.csv")
     write_csv(repos, csv_path)
 
-    has_history = bool(prev_date) or args.demo
     label = SINCE_LABELS.get(args.since, args.since)
-
     payload = {
         "meta": {
             "date": today,
@@ -204,6 +251,7 @@ def main() -> None:
             "language": args.language,
             "prev_date": prev_date,
             "demo": bool(args.demo),
+            "site_url": SITE_URL,
         },
         "stats": {
             "count": stats["count"],
@@ -211,9 +259,11 @@ def main() -> None:
             "total_period_stars": stats["total_period_stars"],
             "language_count": stats["language_count"],
             "new_count": stats["new_count"],
-            "has_history": has_history,
+            "has_history": bool(history),
         },
         "languages": language_breakdown(repos),
+        "history": trend,
+        "dropped": dropped,
         "repos": [
             {
                 "rank": r.get("rank"),
@@ -222,8 +272,12 @@ def main() -> None:
                 "stars": r.get("stars"),
                 "forks": r.get("forks"),
                 "period_stars": r.get("period_stars"),
+                "growth": r.get("growth"),
                 "is_new": r.get("is_new"),
                 "delta_stars": r.get("delta_stars"),
+                "rank_delta": r.get("rank_delta"),
+                "streak": r.get("streak"),
+                "appearances": r.get("appearances"),
                 "description": r.get("description"),
                 "url": r.get("url"),
             }
@@ -235,16 +289,26 @@ def main() -> None:
     html = render(payload, title=title, repo_url=REPO_URL)
     write_html(html_path, html)
 
-    _print_summary(repos, stats, args.since)
+    json_path = os.path.join(outdir, f"latest_{args.since}.json")
+    os.makedirs(outdir, exist_ok=True)
+    with open(json_path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    with open(rss_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(build_rss(repos, payload["meta"], SITE_URL))
+
+    _print_summary(repos, stats, args.since, dropped)
 
     if len(repos) < 10:
         print(
-            f"\n⚠️  只抓到 {len(repos)} 个仓库（通常为 25 个），"
+            f"\n注意：只抓到 {len(repos)} 个仓库（通常为 25 个），"
             "可能被 GitHub 限流。稍等几分钟再试即可。"
         )
 
     print(f"\n看板已生成：{html_path}")
-    print(f"明细已保存：{csv_path}")
+    print(f"CSV 明细：{csv_path}")
+    print(f"JSON 快照：{json_path}")
+    print(f"RSS 订阅：{rss_path}")
 
     if not args.no_open:
         try:

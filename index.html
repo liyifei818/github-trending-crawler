@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="GitHub Trending 每日热门仓库数据看板：语言分布、星标增长与完整榜单。">
+<meta name="description" content="GitHub Trending 每日热门仓库数据看板：历史趋势、增速、语言分布与完整榜单。">
+<link rel="alternate" type="application/rss+xml" title="GitHub Trending 榜单" href="feed.xml">
 <title>GitHub Trending 数据看板 · 2026-10-23</title>
 <style>
 :root{
@@ -144,6 +145,28 @@ h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
 .track{height:6px;border-radius:99px;background:rgba(127,127,127,.17);margin-top:7px;overflow:hidden}
 .fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .95s cubic-bezier(.22,1,.36,1)}
 .bar-val{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.trend-panel{margin-bottom:20px}
+.trend-wrap{width:100%}
+#trend{display:block;width:100%;height:auto;overflow:visible}
+#trend .grid{stroke:currentColor;stroke-opacity:.08;stroke-width:1}
+#trend .axis{fill:var(--muted);font-size:10px}
+#trend .trend-line{fill:none;stroke:url(#trendLine);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:4000;stroke-dashoffset:4000;animation:drawLine 1.3s ease forwards}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+#trend .trend-area{fill:url(#trendArea)}
+#trend .trend-dot{fill:var(--panel-solid);stroke:var(--accent);stroke-width:2}
+#trend .trend-dot.last{fill:var(--accent);stroke:#fff;stroke-width:2.4}
+.trend-foot{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.trend-foot b{color:var(--text);font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.dropped-list{display:flex;flex-wrap:wrap;gap:8px}
+.dropped-item{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel-solid);font-size:12.5px;text-decoration:none;color:var(--text);transition:transform .16s,border-color .16s}
+.dropped-item:hover{transform:translateY(-1px);border-color:rgba(255,107,129,.55)}
+.dropped-item .rk{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.streak{font-size:10px;color:#c9a15a;background:rgba(255,184,77,.07);border:1px solid rgba(255,184,77,.2);padding:1px 6px;border-radius:999px;white-space:nowrap;font-weight:600;flex:none}
+.rk-delta{font-size:10px;margin-left:3px;font-weight:700;vertical-align:1px}
+.rk-delta.up{color:var(--good)}
+.rk-delta.down{color:var(--bad)}
+.growth{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.growth.hot{color:var(--accent-3);font-weight:650}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
 .field{position:relative;flex:1 1 250px;min-width:180px}
 .field svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;fill:var(--muted);pointer-events:none}
@@ -163,7 +186,7 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent;color:#fff;box-shadow:0 10px 22px -12px var(--accent)}
 .spacer{flex:1 1 0}
 .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:660px}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}
 thead th{
   position:sticky;top:0;z-index:2;background:var(--panel-solid);text-align:left;
   padding:11px 12px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
@@ -263,10 +286,25 @@ footer a:hover{text-decoration:underline}
 
   <section class="stats" id="stats" aria-label="核心指标"></section>
 
+  <section class="panel trend-panel" aria-labelledby="h-trend">
+    <div class="panel-head">
+      <div><div class="kicker">01 / Trend</div><h2 id="h-trend">历史趋势</h2></div>
+      <div class="seg" id="trendSeg" role="group" aria-label="切换趋势指标">
+        <button type="button" data-trend="period" aria-pressed="true">周期新增</button>
+        <button type="button" data-trend="avg" aria-pressed="false">平均星标</button>
+        <button type="button" data-trend="count" aria-pressed="false">收录数</button>
+      </div>
+    </div>
+    <div class="trend-wrap">
+      <svg id="trend" viewBox="0 0 720 220" role="img" aria-label="历史趋势折线图"></svg>
+    </div>
+    <div class="trend-foot" id="trendFoot"></div>
+  </section>
+
   <div class="charts">
     <section class="panel" aria-labelledby="h-lang">
       <div class="panel-head">
-        <div><div class="kicker">01 / Language</div><h2 id="h-lang">语言分布</h2></div>
+        <div><div class="kicker">02 / Language</div><h2 id="h-lang">语言分布</h2></div>
         <span class="hint-text" id="langHint"></span>
       </div>
       <div class="donut-wrap">
@@ -280,9 +318,10 @@ footer a:hover{text-decoration:underline}
 
     <section class="panel" aria-labelledby="h-top">
       <div class="panel-head">
-        <div><div class="kicker">02 / Leaderboard</div><h2 id="h-top">Top 10 榜单</h2></div>
+        <div><div class="kicker">03 / Leaderboard</div><h2 id="h-top">Top 10 榜单</h2></div>
         <div class="seg" id="metricSeg" role="group" aria-label="切换排行指标">
           <button type="button" data-metric="period" aria-pressed="true">周期新增</button>
+          <button type="button" data-metric="growth" aria-pressed="false">增速</button>
           <button type="button" data-metric="stars" aria-pressed="false">总星标</button>
         </div>
       </div>
@@ -290,9 +329,17 @@ footer a:hover{text-decoration:underline}
     </section>
   </div>
 
+  <section class="panel" id="droppedPanel" aria-labelledby="h-dropped" hidden>
+    <div class="panel-head">
+      <div><div class="kicker">04 / Dropped</div><h2 id="h-dropped">掉出榜单</h2></div>
+      <span class="hint-text" id="droppedCount"></span>
+    </div>
+    <div class="dropped-list" id="droppedList"></div>
+  </section>
+
   <section class="panel" aria-labelledby="h-all">
     <div class="panel-head">
-      <div><div class="kicker">03 / All Repositories</div><h2 id="h-all">完整榜单</h2></div>
+      <div><div class="kicker">05 / All Repositories</div><h2 id="h-all">完整榜单</h2></div>
       <span class="hint-text" id="countLabel"></span>
     </div>
 
@@ -317,6 +364,7 @@ footer a:hover{text-decoration:underline}
             <th scope="col">语言</th>
             <th class="sortable" data-key="stars" scope="col">总星标</th>
             <th class="sortable" data-key="period_stars" scope="col">周期新增</th>
+            <th class="sortable" data-key="growth" scope="col" title="本期新增星标占现有星标的比例">增速</th>
             <th class="sortable" data-key="forks" scope="col">Fork</th>
             <th class="sortable" data-key="delta_stars" scope="col">较上次</th>
             <th scope="col">描述</th>
@@ -335,7 +383,7 @@ footer a:hover{text-decoration:underline}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script id="trend-data" type="application/json">{"meta":{"date":"2026-10-23","generated_at":"2026-10-23 00:10","since":"daily","since_label":"今日","period_label":"今日热门","language":null,"prev_date":null,"demo":false},"stats":{"count":9,"total_stars":684814,"total_period_stars":8012,"language_count":5,"new_count":0,"has_history":false},"languages":[{"name":"Python","count":4,"pct":44.4},{"name":"JavaScript","count":2,"pct":22.2},{"name":"C","count":1,"pct":11.1},{"name":"TypeScript","count":1,"pct":11.1},{"name":"Visual Basic .NET","count":1,"pct":11.1}],"repos":[{"rank":1,"full_name":"php/php-src","language":"C","stars":40959,"forks":8291,"period_stars":110,"is_new":null,"delta_stars":null,"description":"The PHP Interpreter","url":"https://github.com/php/php-src"},{"rank":2,"full_name":"anthropics/knowledge-work-plugins","language":"Python","stars":31399,"forks":3517,"period_stars":303,"is_new":null,"delta_stars":null,"description":"Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork","url":"https://github.com/anthropics/knowledge-work-plugins"},{"rank":3,"full_name":"DietrichGebert/ponytail","language":"JavaScript","stars":172927,"forks":9411,"period_stars":1949,"is_new":null,"delta_stars":null,"description":"Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote.","url":"https://github.com/DietrichGebert/ponytail"},{"rank":4,"full_name":"cloudflare/security-audit-skill","language":"JavaScript","stars":38629,"forks":2408,"period_stars":2979,"is_new":null,"delta_stars":null,"description":"A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings","url":"https://github.com/cloudflare/security-audit-skill"},{"rank":5,"full_name":"Graphify-Labs/graphify","language":"Python","stars":132557,"forks":12698,"period_stars":1407,"is_new":null,"delta_stars":null,"description":"Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.","url":"https://github.com/Graphify-Labs/graphify"},{"rank":6,"full_name":"supabase/supabase","language":"TypeScript","stars":113351,"forks":16993,"period_stars":683,"is_new":null,"delta_stars":null,"description":"The Postgres development platform. Supabase gives you a dedicated Postgres database to build your web, mobile, and AI applications.","url":"https://github.com/supabase/supabase"},{"rank":7,"full_name":"fastapi/fastapi","language":"Python","stars":103540,"forks":10077,"period_stars":96,"is_new":null,"delta_stars":null,"description":"FastAPI framework, high performance, easy to learn, fast to code, ready for production","url":"https://github.com/fastapi/fastapi"},{"rank":8,"full_name":"luongnv89/claude-howto","language":"Python","stars":42830,"forks":5366,"period_stars":370,"is_new":null,"delta_stars":null,"description":"A visual, example-driven guide to Claude Code — from basic concepts to advanced agents, with copy-paste templates that bring immediate value.","url":"https://github.com/luongnv89/claude-howto"},{"rank":9,"full_name":"Meloong-Git/PCL","language":"Visual Basic .NET","stars":8622,"forks":1192,"period_stars":115,"is_new":null,"delta_stars":null,"description":"Minecraft 启动器 Plain Craft Launcher（PCL）。","url":"https://github.com/Meloong-Git/PCL"}]}</script>
+<script id="trend-data" type="application/json">{"meta":{"date":"2026-10-23","generated_at":"2026-10-23 00:45","since":"daily","since_label":"今日","period_label":"今日热门","language":null,"prev_date":null,"demo":false,"site_url":"https://liyifei818.github.io/github-trending-crawler/"},"stats":{"count":9,"total_stars":685071,"total_period_stars":8325,"language_count":5,"new_count":0,"has_history":false},"languages":[{"name":"Python","count":4,"pct":44.4},{"name":"JavaScript","count":2,"pct":22.2},{"name":"C","count":1,"pct":11.1},{"name":"TypeScript","count":1,"pct":11.1},{"name":"Visual Basic .NET","count":1,"pct":11.1}],"history":[{"date":"2026-10-23","count":9,"total_stars":685071,"avg_stars":76119,"total_period_stars":8325}],"dropped":[],"repos":[{"rank":1,"full_name":"php/php-src","language":"C","stars":40974,"forks":8293,"period_stars":423,"growth":1.03,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"The PHP Interpreter","url":"https://github.com/php/php-src"},{"rank":2,"full_name":"anthropics/knowledge-work-plugins","language":"Python","stars":31416,"forks":3518,"period_stars":303,"growth":0.96,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork","url":"https://github.com/anthropics/knowledge-work-plugins"},{"rank":3,"full_name":"DietrichGebert/ponytail","language":"JavaScript","stars":172971,"forks":9415,"period_stars":1949,"growth":1.13,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote.","url":"https://github.com/DietrichGebert/ponytail"},{"rank":4,"full_name":"cloudflare/security-audit-skill","language":"JavaScript","stars":38701,"forks":2411,"period_stars":2979,"growth":7.7,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings","url":"https://github.com/cloudflare/security-audit-skill"},{"rank":5,"full_name":"Graphify-Labs/graphify","language":"Python","stars":132607,"forks":12700,"period_stars":1407,"growth":1.06,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.","url":"https://github.com/Graphify-Labs/graphify"},{"rank":6,"full_name":"supabase/supabase","language":"TypeScript","stars":113361,"forks":16985,"period_stars":683,"growth":0.6,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"The Postgres development platform. Supabase gives you a dedicated Postgres database to build your web, mobile, and AI applications.","url":"https://github.com/supabase/supabase"},{"rank":7,"full_name":"fastapi/fastapi","language":"Python","stars":103555,"forks":10077,"period_stars":96,"growth":0.09,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"FastAPI framework, high performance, easy to learn, fast to code, ready for production","url":"https://github.com/fastapi/fastapi"},{"rank":8,"full_name":"luongnv89/claude-howto","language":"Python","stars":42858,"forks":5368,"period_stars":370,"growth":0.86,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"A visual, example-driven guide to Claude Code — from basic concepts to advanced agents, with copy-paste templates that bring immediate value.","url":"https://github.com/luongnv89/claude-howto"},{"rank":9,"full_name":"Meloong-Git/PCL","language":"Visual Basic .NET","stars":8628,"forks":1193,"period_stars":115,"growth":1.33,"is_new":null,"delta_stars":null,"rank_delta":null,"streak":null,"appearances":null,"description":"Minecraft 启动器 Plain Craft Launcher（PCL）。","url":"https://github.com/Meloong-Git/PCL"}]}</script>
 <script>
 (function () {
   "use strict";
@@ -345,6 +393,8 @@ footer a:hover{text-decoration:underline}
   var STATS = DATA.stats || {};
   var LANGS = Array.isArray(DATA.languages) ? DATA.languages : [];
   var REPOS = Array.isArray(DATA.repos) ? DATA.repos : [];
+  var HISTORY = Array.isArray(DATA.history) ? DATA.history : [];
+  var DROPPED = Array.isArray(DATA.dropped) ? DATA.dropped : [];
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls) {
@@ -386,6 +436,7 @@ footer a:hover{text-decoration:underline}
     var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     applyTheme(next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    syncUrl();
   });
 
   /* ---------- 语言配色（GitHub linguist 常见色） ---------- */
@@ -418,21 +469,24 @@ footer a:hover{text-decoration:underline}
   $("lede").textContent =
     "抓取 GitHub Trending " + (META.period_label || sinceLabel) + "榜单" +
     (META.language ? "（" + META.language + "）" : "（全语言）") +
-    "，共 " + STATS.count + " 个仓库。下面是语言构成、增长排行与可筛选的完整名单。";
+    "，共 " + STATS.count + " 个仓库。" +
+    (STATS.has_history
+      ? "已积累 " + HISTORY.length + " 天快照，下面能看到趋势曲线、排名变化与掉榜情况。"
+      : "下面是语言构成、增长排行与可筛选的完整名单。");
 
   var chips = [
-    "📅 " + (META.date || "—"),
-    "🔥 " + sinceLabel + "榜单",
-    "🌐 " + (META.language || "全语言")
+    { text: "日期 " + (META.date || "—") },
+    { text: sinceLabel + "榜单" },
+    { text: META.language || "全语言" }
   ];
   if (STATS.has_history) {
-    chips.push("🆕 对比 " + (META.prev_date || "上次快照"));
+    chips.push({ text: "对比 " + (META.prev_date || "上次快照") });
   }
-  if (META.demo) chips.push("🧪 示例数据");
+  if (META.demo) chips.push({ text: "示例数据", cls: " demo" });
 
-  chips.forEach(function (text) {
-    var span = el("span", "chip" + (text.indexOf("🧪") === 0 ? " demo" : ""));
-    span.textContent = text;
+  chips.forEach(function (chip) {
+    var span = el("span", "chip" + (chip.cls || ""));
+    span.textContent = chip.text;
     $("chips").appendChild(span);
   });
 
@@ -620,12 +674,14 @@ footer a:hover{text-decoration:underline}
 
   /* ---------- Top10 条形图 ---------- */
   var hasPeriod = REPOS.some(function (r) { return (r.period_stars || 0) > 0; });
+  var hasGrowth = REPOS.some(function (r) { return (r.growth || 0) > 0; });
   var metric = hasPeriod ? "period" : "stars";
 
   function renderBars() {
     var box = $("bars");
     box.textContent = "";
-    var key = metric === "stars" ? "stars" : "period_stars";
+    var key = metric === "stars" ? "stars"
+      : (metric === "growth" ? "growth" : "period_stars");
     var sorted = REPOS.slice().sort(function (a, b) {
       return (b[key] || 0) - (a[key] || 0);
     }).slice(0, 10);
@@ -664,7 +720,10 @@ footer a:hover{text-decoration:underline}
       main.appendChild(track);
 
       var value = el("div", "bar-val");
-      value.textContent = fmt(repo[key]);
+      value.textContent = metric === "growth" &&
+        repo.growth !== null && repo.growth !== undefined
+        ? repo.growth.toFixed(1) + "%"
+        : fmt(repo[key]);
 
       row.appendChild(rank);
       row.appendChild(main);
@@ -685,6 +744,10 @@ footer a:hover{text-decoration:underline}
       btn.disabled = true;
       btn.title = "本次数据没有周期新增星标";
     }
+    if (btn.dataset.metric === "growth" && !hasGrowth) {
+      btn.disabled = true;
+      btn.title = "本次数据无法计算增速";
+    }
     btn.addEventListener("click", function () {
       if (btn.disabled) return;
       metric = btn.dataset.metric;
@@ -696,8 +759,241 @@ footer a:hover{text-decoration:underline}
     });
   });
 
+  /* ---------- 历史趋势折线图 ---------- */
+  var trendMetric = "period";
+
+  function compact(n) {
+    n = Number(n) || 0;
+    if (n >= 1000000) return (n / 1000000).toFixed(n >= 10000000 ? 0 : 1) + "M";
+    if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k";
+    return String(n);
+  }
+
+  function trendValue(item) {
+    if (trendMetric === "avg") return item.avg_stars || 0;
+    if (trendMetric === "count") return item.count || 0;
+    return item.total_period_stars || 0;
+  }
+
+  function svgNode(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    for (var key in attrs) {
+      if (Object.prototype.hasOwnProperty.call(attrs, key)) {
+        node.setAttribute(key, attrs[key]);
+      }
+    }
+    return node;
+  }
+
+  function renderTrend() {
+    var svg = $("trend");
+    if (!svg) return;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var wrap = svg.parentNode;
+    var width = Math.max(300, Math.round(wrap.clientWidth || 720));
+    var height = width < 520 ? 172 : 220;
+    var padL = width < 520 ? 40 : 54;
+    var padR = 14;
+    var padT = 14;
+    var padB = width < 520 ? 24 : 28;
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.style.height = height + "px";
+
+    var foot = $("trendFoot");
+    foot.textContent = "";
+
+    var points = HISTORY.slice();
+    if (points.length < 2) {
+      var hint = el("span");
+      hint.textContent = points.length
+        ? "数据积累中：目前只有 1 天快照，明天再来就能看到曲线。"
+        : "还没有历史快照。连续运行两天后，这里会出现趋势曲线。";
+      foot.appendChild(hint);
+      return;
+    }
+
+    var values = points.map(trendValue);
+    var maxValue = Math.max.apply(null, values);
+    var minValue = Math.min.apply(null, values);
+    if (maxValue === minValue) {
+      maxValue = minValue + Math.max(1, Math.abs(minValue) * 0.1);
+    }
+    var gap = maxValue - minValue;
+    maxValue += gap * 0.12;
+    minValue -= gap * 0.12;
+    if (minValue < 0) minValue = 0;
+
+    var innerW = width - padL - padR;
+    var innerH = height - padT - padB;
+
+    function px(index) {
+      return points.length === 1
+        ? padL + innerW / 2
+        : padL + innerW * index / (points.length - 1);
+    }
+    function py(value) {
+      return padT + innerH * (1 - (value - minValue) / (maxValue - minValue));
+    }
+
+    var defs = svgNode("defs", {});
+    var lineGrad = svgNode("linearGradient", {
+      id: "trendLine", x1: "0", y1: "0", x2: "1", y2: "0"
+    });
+    lineGrad.appendChild(svgNode("stop", { offset: "0%", "stop-color": "#4f8cff" }));
+    lineGrad.appendChild(svgNode("stop", { offset: "55%", "stop-color": "#a06bff" }));
+    lineGrad.appendChild(svgNode("stop", { offset: "100%", "stop-color": "#2ee6c5" }));
+    defs.appendChild(lineGrad);
+
+    var areaGrad = svgNode("linearGradient", {
+      id: "trendArea", x1: "0", y1: "0", x2: "0", y2: "1"
+    });
+    areaGrad.appendChild(svgNode("stop", {
+      offset: "0%", "stop-color": "#4f8cff", "stop-opacity": "0.30"
+    }));
+    areaGrad.appendChild(svgNode("stop", {
+      offset: "100%", "stop-color": "#4f8cff", "stop-opacity": "0"
+    }));
+    defs.appendChild(areaGrad);
+    svg.appendChild(defs);
+
+    for (var step = 0; step <= 4; step++) {
+      var gridY = padT + innerH * step / 4;
+      svg.appendChild(svgNode("line", {
+        class: "grid", x1: padL, y1: gridY, x2: width - padR, y2: gridY
+      }));
+      var axisValue = maxValue - (maxValue - minValue) * step / 4;
+      var axisLabel = svgNode("text", {
+        class: "axis", x: padL - 8, y: gridY + 3, "text-anchor": "end"
+      });
+      axisLabel.textContent = compact(axisValue);
+      svg.appendChild(axisLabel);
+    }
+
+    var linePath = "";
+    var areaPath = "";
+    points.forEach(function (point, index) {
+      var x = px(index).toFixed(1);
+      var y = py(values[index]).toFixed(1);
+      linePath += (index === 0 ? "M" : "L") + x + " " + y + " ";
+      areaPath += (index === 0 ? "M" : "L") + x + " " + y + " ";
+    });
+    var bottom = (padT + innerH).toFixed(1);
+    areaPath += "L" + px(points.length - 1).toFixed(1) + " " + bottom +
+                " L" + px(0).toFixed(1) + " " + bottom + " Z";
+
+    svg.appendChild(svgNode("path", { class: "trend-area", d: areaPath }));
+    svg.appendChild(svgNode("path", { class: "trend-line", d: linePath }));
+
+    points.forEach(function (point, index) {
+      var dot = svgNode("circle", {
+        class: "trend-dot" + (index === points.length - 1 ? " last" : ""),
+        cx: px(index).toFixed(1),
+        cy: py(values[index]).toFixed(1),
+        r: index === points.length - 1 ? "4.2" : "3"
+      });
+      var title = document.createElementNS(SVG_NS, "title");
+      title.textContent = point.date + " · " + fmt(values[index]);
+      dot.appendChild(title);
+      svg.appendChild(dot);
+    });
+
+    [0, Math.floor((points.length - 1) / 2), points.length - 1].forEach(
+      function (index, position, all) {
+        if (all.indexOf(index) !== position) return;
+        var label = svgNode("text", {
+          class: "axis",
+          x: px(index).toFixed(1),
+          y: height - 6,
+          "text-anchor": index === 0 ? "start"
+            : (index === points.length - 1 ? "end" : "middle")
+        });
+        label.textContent = points[index].date.slice(5);
+        svg.appendChild(label);
+      }
+    );
+
+    var last = values[values.length - 1];
+    var diff = last - values[values.length - 2];
+
+    var item1 = el("span");
+    item1.appendChild(document.createTextNode("当前 "));
+    var strong1 = el("b");
+    strong1.textContent = fmt(last);
+    item1.appendChild(strong1);
+
+    var item2 = el("span");
+    item2.appendChild(document.createTextNode("较上次 "));
+    var strong2 = el("b");
+    strong2.textContent = (diff >= 0 ? "+" : "") + fmt(diff);
+    strong2.style.color = diff >= 0 ? "var(--good)" : "var(--bad)";
+    item2.appendChild(strong2);
+
+    var item3 = el("span");
+    item3.appendChild(document.createTextNode("快照 "));
+    var strong3 = el("b");
+    strong3.textContent = points.length + " 天";
+    item3.appendChild(strong3);
+
+    foot.appendChild(item1);
+    foot.appendChild(item2);
+    foot.appendChild(item3);
+  }
+
+  Array.prototype.forEach.call(
+    $("trendSeg").querySelectorAll("button"),
+    function (btn) {
+      btn.addEventListener("click", function () {
+        trendMetric = btn.dataset.trend;
+        Array.prototype.forEach.call(
+          $("trendSeg").querySelectorAll("button"),
+          function (other) {
+            other.setAttribute("aria-pressed", String(other === btn));
+          }
+        );
+        renderTrend();
+      });
+    }
+  );
+
+  var trendResizeTimer = null;
+  window.addEventListener("resize", function () {
+    window.clearTimeout(trendResizeTimer);
+    trendResizeTimer = window.setTimeout(renderTrend, 160);
+  });
+
+  /* ---------- 掉榜 ---------- */
+  function renderDropped() {
+    var panel = $("droppedPanel");
+    if (!panel) return;
+    if (!DROPPED.length) {
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = false;
+    $("droppedCount").textContent = "上次在榜、本次消失 " + DROPPED.length + " 个";
+
+    var box = $("droppedList");
+    box.textContent = "";
+    DROPPED.forEach(function (item) {
+      var link = document.createElement("a");
+      link.className = "dropped-item";
+      link.href = safeUrl(item.url);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      var name = el("span");
+      name.textContent = item.full_name;
+      var rank = el("span", "rk");
+      rank.textContent = "#" + (item.rank || "?");
+      link.appendChild(name);
+      link.appendChild(rank);
+      box.appendChild(link);
+    });
+  }
+
   /* ---------- 表格 ---------- */
   var state = { q: "", lang: "", newOnly: false, sort: "rank", dir: 1 };
+  var SORT_KEYS = ["rank", "stars", "period_stars", "growth", "forks", "delta_stars"];
 
   function langOf(repo) { return repo.language || "未标注"; }
 
@@ -728,6 +1024,68 @@ footer a:hover{text-decoration:underline}
     });
   }
 
+  var urlParams = null;
+  try {
+    urlParams = new URLSearchParams(window.location.search);
+  } catch (e) { urlParams = null; }
+
+  function applyUrlState() {
+    if (!urlParams) return;
+
+    var query = urlParams.get("q");
+    if (query) {
+      state.q = query;
+      $("search").value = query;
+    }
+
+    var lang = urlParams.get("lang");
+    if (lang) {
+      var select = $("langFilter");
+      var exists = Array.prototype.some.call(select.options, function (option) {
+        return option.value === lang;
+      });
+      if (exists) {
+        state.lang = lang;
+        select.value = lang;
+      }
+    }
+
+    var sort = urlParams.get("sort");
+    if (sort && SORT_KEYS.indexOf(sort) !== -1) {
+      state.sort = sort;
+      state.dir = sort === "rank" ? 1 : -1;
+    }
+    var dir = urlParams.get("dir");
+    if (dir === "asc") state.dir = 1;
+    else if (dir === "desc") state.dir = -1;
+
+    if (urlParams.get("new") === "1") {
+      state.newOnly = true;
+      $("newOnly").checked = true;
+    }
+  }
+
+  function syncUrl() {
+    if (!window.history || !window.history.replaceState) return;
+    try {
+      var params = new URLSearchParams();
+      if (state.q) params.set("q", state.q);
+      if (state.lang) params.set("lang", state.lang);
+      if (state.sort !== "rank") {
+        params.set("sort", state.sort);
+        params.set("dir", state.dir > 0 ? "asc" : "desc");
+      }
+      if (state.newOnly) params.set("new", "1");
+      if (root.getAttribute("data-theme") === "light") {
+        params.set("theme", "light");
+      }
+      var query = params.toString();
+      window.history.replaceState(
+        null, "", query ? "?" + query : window.location.pathname
+      );
+    } catch (e) { /* file:// 下可能被拦截，忽略即可 */ }
+  }
+
   function safeUrl(url) {
     var text = String(url || "");
     return /^https:\/\/github\.com\/[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+\/?$/.test(text)
@@ -750,6 +1108,7 @@ footer a:hover{text-decoration:underline}
       rank: function (a, b) { return (a.rank || 0) - (b.rank || 0); },
       stars: function (a, b) { return (b.stars || 0) - (a.stars || 0); },
       period_stars: function (a, b) { return (b.period_stars || 0) - (a.period_stars || 0); },
+      growth: function (a, b) { return (b.growth || 0) - (a.growth || 0); },
       forks: function (a, b) { return (b.forks || 0) - (a.forks || 0); },
       delta_stars: function (a, b) { return (b.delta_stars || 0) - (a.delta_stars || 0); }
     };
@@ -780,7 +1139,7 @@ footer a:hover{text-decoration:underline}
     if (!rows.length) {
       var trEmpty = el("tr", "empty");
       var tdEmpty = el("td");
-      tdEmpty.colSpan = 8;
+      tdEmpty.colSpan = 9;
       tdEmpty.textContent = REPOS.length
         ? "没有匹配的仓库，试试换个关键词或清空筛选。"
         : "本次没有拿到数据，请稍后重试或检查网络。";
@@ -793,7 +1152,23 @@ footer a:hover{text-decoration:underline}
 
         var tdRank = el("td", "num");
         tdRank.dataset.label = "";  // 窄屏卡片布局里作为右上角编号
-        tdRank.textContent = repo.rank ? String(repo.rank) : "—";
+        var rankNumber = el("span");
+        rankNumber.textContent = repo.rank ? String(repo.rank) : "—";
+        tdRank.appendChild(rankNumber);
+        if (
+          repo.rank_delta !== null && repo.rank_delta !== undefined &&
+          repo.rank_delta !== 0
+        ) {
+          var rankDelta = el(
+            "span", "rk-delta " + (repo.rank_delta > 0 ? "up" : "down")
+          );
+          rankDelta.textContent =
+            (repo.rank_delta > 0 ? "▲" : "▼") + Math.abs(repo.rank_delta);
+          rankDelta.title = "较上次排名" +
+            (repo.rank_delta > 0 ? "上升 " : "下降 ") +
+            Math.abs(repo.rank_delta) + " 位";
+          tdRank.appendChild(rankDelta);
+        }
 
         var tdRepo = el("td");
         tdRepo.dataset.label = "";
@@ -808,6 +1183,13 @@ footer a:hover{text-decoration:underline}
           var pill = el("span", "pill new");
           pill.textContent = "NEW";
           wrap.appendChild(pill);
+        }
+        if (repo.streak && repo.streak >= 3) {
+          var streakTag = el("span", "streak");
+          streakTag.textContent = "连续 " + repo.streak + " 天";
+          streakTag.title = "连续在榜 " + repo.streak + " 天，累计上榜 " +
+            (repo.appearances || repo.streak) + " 次";
+          wrap.appendChild(streakTag);
         }
         tdRepo.appendChild(wrap);
 
@@ -828,6 +1210,20 @@ footer a:hover{text-decoration:underline}
         var tdPeriod = el("td", "num");
         tdPeriod.dataset.label = "周期新增";
         tdPeriod.textContent = fmt(repo.period_stars);
+
+        var tdGrowth = el("td", "num");
+        tdGrowth.dataset.label = "增速";
+        if (repo.growth === null || repo.growth === undefined) {
+          tdGrowth.textContent = "—";
+        } else {
+          var growthTag = el(
+            "span", "growth" + (repo.growth >= 10 ? " hot" : "")
+          );
+          growthTag.textContent = repo.growth.toFixed(1) + "%";
+          growthTag.title = "本期新增星标占现有星标的 " +
+            repo.growth.toFixed(2) + "%";
+          tdGrowth.appendChild(growthTag);
+        }
 
         var tdForks = el("td", "num");
         tdForks.dataset.label = "Fork";
@@ -863,6 +1259,7 @@ footer a:hover{text-decoration:underline}
         tr.appendChild(tdLang);
         tr.appendChild(tdStars);
         tr.appendChild(tdPeriod);
+        tr.appendChild(tdGrowth);
         tr.appendChild(tdForks);
         tr.appendChild(tdDelta);
         tr.appendChild(tdDesc);
@@ -873,6 +1270,7 @@ footer a:hover{text-decoration:underline}
 
     $("countLabel").textContent = "显示 " + rows.length + " / " + REPOS.length + " 条";
     setAriaSort();
+    syncUrl();
   }
 
   Array.prototype.forEach.call(
@@ -1018,7 +1416,11 @@ footer a:hover{text-decoration:underline}
   renderLegend();
   renderBars();
   buildLangOptions();
+  applyUrlState();
+  syncLegend();
   renderTable();
+  renderTrend();
+  renderDropped();
 })();
 </script>
 </body>

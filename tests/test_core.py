@@ -11,15 +11,18 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from analyzer import (  # noqa: E402
+    add_momentum,
     analyze,
     apply_history,
-    find_previous_csv,
+    build_trend,
+    find_dropped,
     language_breakdown,
-    load_snapshot,
+    load_history,
     write_csv,
 )
 from crawler import build_url, parse_trending  # noqa: E402
 from dashboard import render  # noqa: E402
+from feed import build_rss  # noqa: E402
 
 # 尽量贴近 GitHub Trending 真实结构的夹具
 FIXTURE = """
@@ -55,6 +58,22 @@ FIXTURE = """
 </article>
 </div>
 """
+
+
+def snapshot(date: str, entries: dict) -> dict:
+    """构造一条历史快照，entries 只需给 rank / stars。"""
+    return {
+        "date": date,
+        "repos": {
+            name: {
+                "rank": info.get("rank", 0),
+                "stars": info.get("stars", 0),
+                "period_stars": info.get("period_stars", 0),
+                "language": info.get("language"),
+            }
+            for name, info in entries.items()
+        },
+    }
 
 
 class TestBuildUrl(unittest.TestCase):
@@ -170,57 +189,154 @@ class TestAnalyze(unittest.TestCase):
         self.assertEqual(language_breakdown([]), [])
 
 
-class TestHistory(unittest.TestCase):
-    def test_new_and_delta(self):
+class TestMomentum(unittest.TestCase):
+    def test_growth(self):
         repos = [
-            {"full_name": "a/1", "stars": 100},
-            {"full_name": "b/2", "stars": 50},
+            {"stars": 1000, "period_stars": 100},
+            {"stars": 0, "period_stars": 5},
+            {"stars": 100, "period_stars": 0},
         ]
-        apply_history(repos, {"a/1": 80})
+        add_momentum(repos)
+        self.assertEqual(repos[0]["growth"], 10.0)
+        self.assertIsNone(repos[1]["growth"])
+        self.assertEqual(repos[2]["growth"], 0.0)
+
+    def test_capped_at_100(self):
+        repos = [{"stars": 100, "period_stars": 500}]
+        add_momentum(repos)
+        self.assertEqual(repos[0]["growth"], 100.0)
+
+    def test_sorted_by_growth(self):
+        repos = [
+            {"full_name": "big/old", "stars": 100000, "period_stars": 500},
+            {"full_name": "small/hot", "stars": 2000, "period_stars": 400},
+        ]
+        add_momentum(repos)
+        stats = analyze(repos)
+        self.assertEqual(stats["top_by_growth"][0]["full_name"], "small/hot")
+
+
+class TestHistory(unittest.TestCase):
+    def test_new_delta_rank_streak(self):
+        repos = [
+            {"full_name": "a/1", "stars": 100, "rank": 1},
+            {"full_name": "b/2", "stars": 50, "rank": 2},
+        ]
+        history = [snapshot("2026-01-01", {"a/1": {"rank": 3, "stars": 80}})]
+        apply_history(repos, history)
+
         self.assertFalse(repos[0]["is_new"])
         self.assertEqual(repos[0]["delta_stars"], 20)
+        self.assertEqual(repos[0]["rank_delta"], 2)  # 第 3 -> 第 1
+        self.assertEqual(repos[0]["streak"], 2)
+        self.assertEqual(repos[0]["appearances"], 2)
+
         self.assertTrue(repos[1]["is_new"])
         self.assertIsNone(repos[1]["delta_stars"])
+        self.assertIsNone(repos[1]["rank_delta"])
+        self.assertEqual(repos[1]["streak"], 1)
 
     def test_no_history(self):
-        repos = [{"full_name": "a/1", "stars": 100}]
-        apply_history(repos, None)
+        repos = [{"full_name": "a/1", "stars": 100, "rank": 1}]
+        apply_history(repos, [])
         self.assertIsNone(repos[0]["is_new"])
-        self.assertIsNone(repos[0]["delta_stars"])
+        self.assertIsNone(repos[0]["streak"])
+        self.assertIsNone(repos[0]["rank_delta"])
 
-    def test_find_previous_and_load(self):
+    def test_streak_breaks_on_gap(self):
+        repos = [{"full_name": "a/1", "stars": 10, "rank": 1}]
+        history = [
+            snapshot("2026-01-01", {"a/1": {"rank": 1, "stars": 8}}),
+            snapshot("2026-01-02", {}),  # 断榜一天
+            snapshot("2026-01-03", {"a/1": {"rank": 2, "stars": 9}}),
+        ]
+        apply_history(repos, history)
+        self.assertEqual(repos[0]["streak"], 2)      # 今天 + 01-03
+        self.assertEqual(repos[0]["appearances"], 3)  # 01-01 / 01-03 / 今天
+
+    def test_load_history(self):
         with tempfile.TemporaryDirectory() as tmp:
             def make(name, stars):
                 write_csv(
-                    [{"full_name": "a/1", "stars": stars}],
+                    [{"full_name": "a/1", "stars": stars, "rank": 1}],
                     os.path.join(tmp, name),
                 )
 
             make("trending_daily_2026-01-01.csv", 10)
             make("trending_daily_2026-01-02.csv", 20)
             make("trending_weekly_2026-01-02.csv", 99)
+            make("trending_daily_2026-01-03.csv", 30)  # 今天，应排除
 
-            path, date = find_previous_csv(tmp, "daily", "2026-01-03")
-            self.assertEqual(date, "2026-01-02")
-            self.assertTrue(path.endswith("trending_daily_2026-01-02.csv"))
-
-            snapshot = load_snapshot(path)
-            self.assertEqual(snapshot, {"a/1": 20})
-
-    def test_ignores_today_and_future(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            write_csv(
-                [{"full_name": "a/1", "stars": 10}],
-                os.path.join(tmp, "trending_daily_2026-01-03.csv"),
+            history = load_history(tmp, "daily", "2026-01-03")
+            self.assertEqual(
+                [item["date"] for item in history],
+                ["2026-01-01", "2026-01-02"],
             )
-            path, date = find_previous_csv(tmp, "daily", "2026-01-03")
-            self.assertIsNone(path)
-            self.assertIsNone(date)
+            self.assertEqual(history[-1]["repos"]["a/1"]["stars"], 20)
 
-    def test_missing_dir(self):
-        path, date = find_previous_csv("no/such/dir", "daily", "2026-01-03")
-        self.assertIsNone(path)
-        self.assertIsNone(date)
+    def test_load_history_missing_dir(self):
+        self.assertEqual(load_history("no/such/dir", "daily", "2026-01-03"), [])
+
+    def test_build_trend(self):
+        history = [
+            snapshot("2026-01-01", {"a/1": {"rank": 1, "stars": 100, "period_stars": 10}}),
+            snapshot("2026-01-02", {"a/1": {"rank": 1, "stars": 130, "period_stars": 15}}),
+        ]
+        repos = [{"full_name": "a/1", "stars": 150, "period_stars": 20}]
+        series = build_trend(history, repos, "2026-01-03")
+
+        self.assertEqual(len(series), 3)
+        self.assertEqual(series[0]["date"], "2026-01-01")
+        self.assertEqual(series[0]["avg_stars"], 100)
+        self.assertEqual(series[-1]["date"], "2026-01-03")
+        self.assertEqual(series[-1]["total_period_stars"], 20)
+
+    def test_find_dropped(self):
+        repos = [{"full_name": "a/1"}]
+        history = [
+            snapshot("2026-01-01", {
+                "a/1": {"rank": 1, "stars": 1},
+                "b/2": {"rank": 2, "stars": 2, "language": "Go"},
+                "c/3": {"rank": 3, "stars": 3},
+            })
+        ]
+        dropped = find_dropped(repos, history)
+        self.assertEqual([item["full_name"] for item in dropped], ["b/2", "c/3"])
+        self.assertEqual(dropped[0]["url"], "https://github.com/b/2")
+        self.assertEqual(dropped[0]["rank"], 2)
+
+    def test_find_dropped_without_history(self):
+        self.assertEqual(find_dropped([{"full_name": "a/1"}], []), [])
+
+
+class TestRss(unittest.TestCase):
+    def test_items_and_escaping(self):
+        repos = [{
+            "full_name": "a/b",
+            "url": "https://github.com/a/b",
+            "description": "A & B <script>alert(1)</script>",
+            "period_stars": 12,
+            "stars": 100,
+            "language": "Python",
+        }]
+        xml = build_rss(repos, {"since_label": "今日"}, "https://example.com/")
+
+        self.assertTrue(xml.startswith("<?xml"))
+        self.assertIn("<rss", xml)
+        self.assertIn("a/b", xml)
+        self.assertIn("&amp;", xml)
+        self.assertNotIn("<script>", xml)
+        self.assertEqual(xml.count("<item>"), 1)
+        self.assertIn("feed.xml", xml)
+
+    def test_limit(self):
+        repos = [
+            {"full_name": f"a/{i}", "url": f"https://github.com/a/{i}",
+             "description": "", "period_stars": i, "stars": i, "language": None}
+            for i in range(20)
+        ]
+        xml = build_rss(repos, {}, "https://example.com/", limit=5)
+        self.assertEqual(xml.count("<item>"), 5)
 
 
 class TestRender(unittest.TestCase):
@@ -229,6 +345,8 @@ class TestRender(unittest.TestCase):
             "meta": {"date": "2026-01-01"},
             "stats": {},
             "languages": [],
+            "history": [],
+            "dropped": [],
             "repos": [{"full_name": "x/y", "description": description}],
         }
 
@@ -248,9 +366,17 @@ class TestRender(unittest.TestCase):
         self.assertNotIn("__REPO_URL__", html)
         self.assertIn("标题", html)
 
+    def test_contains_new_sections(self):
+        html = render(self._payload("ok"), "T", "https://github.com/u/r")
+        self.assertIn('id="trend"', html)
+        self.assertIn('id="droppedPanel"', html)
+        self.assertIn('data-key="growth"', html)
+        self.assertIn('type="application/rss+xml"', html)
+
     def test_empty_data_renders(self):
         html = render(
-            {"meta": {}, "stats": {}, "languages": [], "repos": []},
+            {"meta": {}, "stats": {}, "languages": [],
+             "history": [], "dropped": [], "repos": []},
             "E", "https://github.com/u/r",
         )
         self.assertIn('id="trend-data"', html)

@@ -16,15 +16,19 @@
 
 - **零第三方依赖** —— 只用 Python 标准库，不用装 requests / bs4 / matplotlib
 - **单文件看板** —— 数据内联进 HTML，不依赖 CDN，离线可用
+- **历史趋势曲线** —— 把每天的快照连成线，可切换「周期新增 / 平均星标 / 收录数」
+- **增速维度** —— 本期新增星标 ÷ 现有星标，专门暴露「小体量、高热度」的黑马，不被老仓库的大星标压住
+- **排名变化与在榜天数** —— 较上次上升/下降几位、连续在榜多少天、累计上榜几次
+- **掉榜清单** —— 上次在榜、本次消失的仓库单独列出
 - **深色 / 浅色主题** —— 右上角切换，支持 `?theme=light` 固定主题分享
 - **语言分布环形图** —— 按 GitHub linguist 配色，悬停查看占比
-- **Top 10 增长榜** —— 可在「周期新增星标」和「总星标」之间切换
+- **Top 10 榜单** —— 可在「周期新增 / 增速 / 总星标」之间切换
 - **完整榜单** —— 搜索、语言筛选、只看新上榜、点击表头排序
-- **历史快照对比** —— 自动标出「新上榜」，并显示较上次的星标增量
-- **导出** —— 一键导出 CSV / 复制 Markdown 表格
+- **可分享的筛选** —— 筛选条件写进 URL（`?q=` `?lang=` `?sort=`），发链接即可复现
+- **导出与订阅** —— 一键导出 CSV、复制 Markdown，另出 JSON 快照与 RSS
 - **移动端适配** —— 窄屏自动切换成卡片式布局，无需横向滚动
 - **离线示例数据** —— `--demo` 不联网也能预览完整界面
-- **单元测试** —— 24 个用例覆盖解析、统计、历史对比与 XSS 转义
+- **单元测试** —— 33 个用例覆盖解析、统计、历史、增速、RSS 与 XSS 转义
 
 ## 快速开始
 
@@ -62,15 +66,34 @@ python main.py -l Rust -s monthly   # Rust 月榜
 | 文件 | 内容 |
 | --- | --- |
 | `index.html` | 最新看板（自动更新，也是 GitHub Pages 的入口） |
-| `demo.html` | 示例数据看板，不参与真实历史 |
+| `feed.xml` | RSS 2.0 订阅源（当期新增最高的 10 个仓库） |
+| `demo.html` / `demo.xml` | 示例数据看板与订阅源，不参与真实历史 |
 | `data/trending_<周期>_<日期>.csv` | 当期明细，同时作为下次运行的历史基线 |
+| `data/latest_<周期>.json` | 机器可读的完整快照（`meta / stats / history / dropped / repos`） |
 
-**历史对比是怎么做的？** 每次运行会找同一周期下、日期早于今天的最近一份 CSV，用它的 `full_name -> stars` 做基线：
+**历史对比是怎么做的？** 每次运行会读取同一周期、日期早于今天的全部 CSV（最多 30 天），然后：
 
 - 上次没出现过的仓库 → 标记 **NEW**
-- 上次出现过 → 计算「较上次」的星标增量
+- 上次出现过 → 计算「较上次」的星标增量，以及排名上升/下降几位
+- 从最近一天往回数连续在榜天数，并统计累计上榜次数
+- 上次在榜、本次消失的仓库 → 进入「掉出榜单」
+- 所有快照的汇总值 → 画成历史趋势曲线
 
-所以连续运行几天后，看板会自动长出趋势信息。这些 CSV 由 GitHub Actions 自动提交，历史不会丢。
+所以连续运行几天后，看板会自动长出趋势、排名变化和掉榜信息。
+
+## 数据接口
+
+除了给人看的 HTML，每次运行还会产出机器可读的数据：
+
+- **JSON**：`data/latest_<周期>.json`，包含 `meta`、`stats`、`languages`、`history`、`dropped`、`repos`
+- **RSS**：`feed.xml`，取当期新增星标最高的 10 个仓库
+
+部署到 GitHub Pages 后可直接访问：
+
+```
+https://liyifei818.github.io/github-trending-crawler/data/latest_daily.json
+https://liyifei818.github.io/github-trending-crawler/feed.xml
+```
 
 ## 工作原理
 
@@ -87,22 +110,22 @@ GitHub 没有公开的 Trending API，所以项目直接解析 `https://github.c
 ```
 .
 ├── crawler.py                   # 抓取 + 解析 Trending HTML
-├── analyzer.py                  # 统计、语言分布、历史快照对比、CSV
+├── analyzer.py                  # 统计、增速、历史对比、趋势序列、CSV
 ├── dashboard.py                 # HTML 看板模板与渲染
+├── feed.py                      # RSS 2.0 生成
 ├── main.py                      # 命令行入口
 ├── index.html                   # 生成的最新看板
-├── demo.html                    # 示例数据看板
+├── feed.xml                     # 生成的 RSS 订阅源
+├── demo.html / demo.xml         # 示例数据产物
 ├── docs/preview.png             # README 预览图
-├── data/                        # 每日 CSV 快照（历史基线）
-├── docs/update-workflow.yml     # 每日自动更新工作流（一键启用）
+├── data/                        # CSV 历史快照 + JSON 快照
+├── .github/workflows/update.yml # 每日自动更新
 └── tests/test_core.py           # 单元测试
 ```
 
 ## 自动更新
 
-仓库附带了现成的工作流文件 [`docs/update-workflow.yml`](docs/update-workflow.yml)，每天 UTC 00:10（北京时间 08:10）自动抓取、重建看板并提交。
-
-启用方式：把它复制到 `.github/workflows/update.yml` 并提交即可，之后也能在 Actions 页面手动触发（Run workflow）。第一次手动触发后，`index.html` 会是完整数据。
+`.github/workflows/update.yml` 每天 UTC 00:10（北京时间 08:10）自动抓取、重建看板与订阅源并提交，也可以在 Actions 页面手动触发（Run workflow）。
 
 ## 测试
 
