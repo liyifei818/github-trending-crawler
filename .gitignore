@@ -1,6 +1,3 @@
-# 运行时生成的数据与图表（每次运行都会重新生成）
-data/
-
 # Python 缓存
 __pycache__/
 *.py[cod]
@@ -11,3 +8,16 @@ __pycache__/
 .venv/
 venv/
 .env
+
+# 示例数据不进入真实历史（demo.html 仍保留，用于展示页面效果）
+data/demo/
+
+# 本地自查产物
+_shot*.png
+_dom.html
+_dbg_dom.html
+_dom.err
+_debug.html
+_check.js
+_cdp_shot.js
+_cdp_clip.js
