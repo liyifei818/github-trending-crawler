@@ -1,0 +1,13 @@
+# 运行时生成的数据与图表（每次运行都会重新生成）
+data/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# 环境与敏感文件
+.venv/
+venv/
+.env
