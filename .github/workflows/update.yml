@@ -16,6 +16,9 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    # 固定北京时间，避免 UTC 与本机日期不一致导致快照日期错位
+    env:
+      TZ: Asia/Shanghai
     steps:
       - name: Checkout
         uses: actions/checkout@v4
