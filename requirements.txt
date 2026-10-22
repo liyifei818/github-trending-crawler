@@ -1,0 +1,5 @@
+# 本项目零第三方依赖，使用 Python 标准库即可运行（urllib / re / csv）。
+# 无需 pip install，直接 `python main.py` 即可体验。
+#
+# 可选扩展：若你更想要 matplotlib 风格的 PNG 图表，可安装后自行扩展 analyzer.py：
+# matplotlib>=3.5
