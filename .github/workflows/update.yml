@@ -28,11 +28,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run tests
-        run: python -m unittest discover -s tests -v
-
       - name: Fetch trending and build dashboard
         run: python main.py --no-open
+
+      # 自检不通过就不提交，坏数据不会上线
+      - name: Self-check (tests + artifacts + browser render)
+        run: python selfcheck.py
 
       - name: Commit and push
         run: |

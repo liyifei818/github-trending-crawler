@@ -28,7 +28,8 @@
 - **导出与订阅** —— 一键导出 CSV、复制 Markdown，另出 JSON 快照与 RSS
 - **移动端适配** —— 窄屏自动切换成卡片式布局，无需横向滚动
 - **离线示例数据** —— `--demo` 不联网也能预览完整界面
-- **单元测试** —— 33 个用例覆盖解析、统计、历史、增速、RSS 与 XSS 转义
+- **单元测试** —— 34 个用例覆盖解析、统计、历史、增速、RSS 与 XSS 转义
+- **一键自检** —— `python selfcheck.py` 跑完测试、产物一致性、真实浏览器交互与线上检查；CI 也用它守门，不通过就不提交
 
 ## 快速开始
 
@@ -114,6 +115,7 @@ GitHub 没有公开的 Trending API，所以项目直接解析 `https://github.c
 ├── dashboard.py                 # HTML 看板模板与渲染
 ├── feed.py                      # RSS 2.0 生成
 ├── main.py                      # 命令行入口
+├── selfcheck.py                 # 一键自检（测试/产物/渲染/线上）
 ├── index.html                   # 生成的最新看板
 ├── feed.xml                     # 生成的 RSS 订阅源
 ├── demo.html / demo.xml         # 示例数据产物
@@ -127,11 +129,26 @@ GitHub 没有公开的 Trending API，所以项目直接解析 `https://github.c
 
 `.github/workflows/update.yml` 每天 UTC 00:10（北京时间 08:10）自动抓取、重建看板与订阅源并提交，也可以在 Actions 页面手动触发（Run workflow）。
 
-## 测试
+## 测试与自检
+
+单元测试：
 
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+一键自检（单元测试 → 产物一致性 → 真实浏览器渲染与交互 → 线上部署）：
+
+```bash
+python selfcheck.py                 # 本地全量检查
+python selfcheck.py --online        # 额外检查线上部署
+python selfcheck.py --github        # 额外检查 Actions 最近一次运行（需 GITHUB_TOKEN）
+python selfcheck.py --skip-browser  # 无浏览器环境时跳过渲染检查
+```
+
+自检会在**真实浏览器里点一遍表头排序、输一次搜索**，核对「表头标记的方向」与「数据实际顺序」是否一致——这个检查曾经抓出过一次排序方向反转的 bug（表头写着降序，数据却是升序）。
+
+CI 也跑同一套检查，**自检不通过就不会提交**，坏数据不会上线。
 
 ## 说明与边界
 
