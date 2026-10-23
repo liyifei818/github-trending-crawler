@@ -1,10 +1,10 @@
 rank,full_name,language,stars,forks,period_stars,period,is_new,delta_stars,description,url
-1,php/php-src,C,41154,8310,287,today,,,The PHP Interpreter,https://github.com/php/php-src
-2,anthropics/knowledge-work-plugins,Python,31597,3531,303,today,,,Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork,https://github.com/anthropics/knowledge-work-plugins
-3,DietrichGebert/ponytail,JavaScript,173470,9438,1948,today,,,Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote.,https://github.com/DietrichGebert/ponytail
-4,cloudflare/security-audit-skill,JavaScript,39575,2466,2979,today,,,"A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings",https://github.com/cloudflare/security-audit-skill
-5,Graphify-Labs/graphify,Python,132944,12722,1408,today,,,"Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.",https://github.com/Graphify-Labs/graphify
-6,supabase/supabase,TypeScript,113483,17001,693,today,,,"The Postgres development platform. Supabase gives you a dedicated Postgres database to build your web, mobile, and AI applications.",https://github.com/supabase/supabase
-7,fastapi/fastapi,Python,103744,10087,101,today,,,"FastAPI framework, high performance, easy to learn, fast to code, ready for production",https://github.com/fastapi/fastapi
-8,luongnv89/claude-howto,Python,43199,5387,177,today,,,"A visual, example-driven guide to Claude Code — from basic concepts to advanced agents, with copy-paste templates that bring immediate value.",https://github.com/luongnv89/claude-howto
-9,Meloong-Git/PCL,Visual Basic .NET,8692,1201,119,today,,,Minecraft 启动器 Plain Craft Launcher（PCL）。,https://github.com/Meloong-Git/PCL
+1,php/php-src,C,41242,8322,287,today,,,The PHP Interpreter,https://github.com/php/php-src
+2,anthropics/knowledge-work-plugins,Python,31707,3539,303,today,,,Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork,https://github.com/anthropics/knowledge-work-plugins
+3,DietrichGebert/ponytail,JavaScript,173733,9461,1948,today,,,Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote.,https://github.com/DietrichGebert/ponytail
+4,cloudflare/security-audit-skill,JavaScript,39832,2485,2979,today,,,"A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings",https://github.com/cloudflare/security-audit-skill
+5,Graphify-Labs/graphify,Python,133127,12733,1408,today,,,"Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.",https://github.com/Graphify-Labs/graphify
+6,supabase/supabase,TypeScript,113545,17009,693,today,,,"The Postgres development platform. Supabase gives you a dedicated Postgres database to build your web, mobile, and AI applications.",https://github.com/supabase/supabase
+7,fastapi/fastapi,Python,103850,10093,101,today,,,"FastAPI framework, high performance, easy to learn, fast to code, ready for production",https://github.com/fastapi/fastapi
+8,luongnv89/claude-howto,Python,43373,5401,177,today,,,"A visual, example-driven guide to Claude Code — from basic concepts to advanced agents, with copy-paste templates that bring immediate value.",https://github.com/luongnv89/claude-howto
+9,Meloong-Git/PCL,Visual Basic .NET,8749,1209,119,today,,,Minecraft 启动器 Plain Craft Launcher（PCL）。,https://github.com/Meloong-Git/PCL

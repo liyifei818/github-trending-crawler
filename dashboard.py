@@ -1118,13 +1118,16 @@ footer a:hover{text-decoration:underline}
       return haystack.indexOf(query) !== -1;
     });
 
+    // 比较器一律写成“升序基线”，方向统一由 state.dir 控制：
+    // dir=1 保持升序，dir=-1 时整体 reverse 得到降序。
+    // （曾经这里写成降序再按 dir 反转，导致两次取反、点表头反而变成升序）
     var sorters = {
       rank: function (a, b) { return (a.rank || 0) - (b.rank || 0); },
-      stars: function (a, b) { return (b.stars || 0) - (a.stars || 0); },
-      period_stars: function (a, b) { return (b.period_stars || 0) - (a.period_stars || 0); },
-      growth: function (a, b) { return (b.growth || 0) - (a.growth || 0); },
-      forks: function (a, b) { return (b.forks || 0) - (a.forks || 0); },
-      delta_stars: function (a, b) { return (b.delta_stars || 0) - (a.delta_stars || 0); }
+      stars: function (a, b) { return (a.stars || 0) - (b.stars || 0); },
+      period_stars: function (a, b) { return (a.period_stars || 0) - (b.period_stars || 0); },
+      growth: function (a, b) { return (a.growth || 0) - (b.growth || 0); },
+      forks: function (a, b) { return (a.forks || 0) - (b.forks || 0); },
+      delta_stars: function (a, b) { return (a.delta_stars || 0) - (b.delta_stars || 0); }
     };
     var sorter = sorters[state.sort] || sorters.rank;
     rows.sort(sorter);

@@ -373,6 +373,21 @@ class TestRender(unittest.TestCase):
         self.assertIn('data-key="growth"', html)
         self.assertIn('type="application/rss+xml"', html)
 
+    def test_sorters_use_ascending_baseline(self):
+        """排序比较器必须统一写成升序基线，方向由 state.dir 决定。
+
+        曾经这里写成降序比较器、代码又按 dir 反转一次，两次取反后
+        点击表头得到的是升序：表头标记 descending，数据却从小到大排。
+        """
+        html = render(self._payload("ok"), "T", "https://github.com/u/r")
+        for key in ("stars", "period_stars", "growth", "forks", "delta_stars"):
+            self.assertIn(
+                "return (a.%s || 0) - (b.%s || 0);" % (key, key), html
+            )
+            self.assertNotIn(
+                "return (b.%s || 0) - (a.%s || 0);" % (key, key), html
+            )
+
     def test_empty_data_renders(self):
         html = render(
             {"meta": {}, "stats": {}, "languages": [],
