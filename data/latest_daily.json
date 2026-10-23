@@ -1,7 +1,7 @@
 {
   "meta": {
     "date": "2026-10-23",
-    "generated_at": "2026-10-23 11:46",
+    "generated_at": "2026-10-23 11:47",
     "since": "daily",
     "since_label": "今日",
     "period_label": "今日热门",
@@ -12,7 +12,7 @@
   },
   "stats": {
     "count": 9,
-    "total_stars": 689158,
+    "total_stars": 689162,
     "total_period_stars": 8015,
     "language_count": 5,
     "new_count": 0,
@@ -49,8 +49,8 @@
     {
       "date": "2026-10-23",
       "count": 9,
-      "total_stars": 689158,
-      "avg_stars": 76573,
+      "total_stars": 689162,
+      "avg_stars": 76574,
       "total_period_stars": 8015
     }
   ],
@@ -77,7 +77,7 @@
       "full_name": "anthropics/knowledge-work-plugins",
       "language": "Python",
       "stars": 31707,
-      "forks": 3539,
+      "forks": 3540,
       "period_stars": 303,
       "growth": 0.96,
       "is_new": null,
@@ -92,7 +92,7 @@
       "rank": 3,
       "full_name": "DietrichGebert/ponytail",
       "language": "JavaScript",
-      "stars": 173733,
+      "stars": 173735,
       "forks": 9461,
       "period_stars": 1948,
       "growth": 1.12,
@@ -108,7 +108,7 @@
       "rank": 4,
       "full_name": "cloudflare/security-audit-skill",
       "language": "JavaScript",
-      "stars": 39832,
+      "stars": 39833,
       "forks": 2485,
       "period_stars": 2979,
       "growth": 7.48,
@@ -172,7 +172,7 @@
       "rank": 8,
       "full_name": "luongnv89/claude-howto",
       "language": "Python",
-      "stars": 43373,
+      "stars": 43374,
       "forks": 5401,
       "period_stars": 177,
       "growth": 0.41,
