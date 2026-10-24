@@ -5,70 +5,63 @@
     <link>https://liyifei818.github.io/github-trending-crawler/</link>
     <description>每天更新的 GitHub 热门仓库榜单</description>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 23 Oct 2026 04:15:24 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 24 Oct 2026 00:49:47 +0000</lastBuildDate>
     <atom:link href='https://liyifei818.github.io/github-trending-crawler/feed.xml' rel='self' type='application/rss+xml'/>
     <item>
       <title>cloudflare/security-audit-skill</title>
       <link>https://github.com/cloudflare/security-audit-skill</link>
       <guid isPermaLink='true'>https://github.com/cloudflare/security-audit-skill</guid>
-      <description>+2,979 stars 今日 · JavaScript · A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <description>+2,716 stars 今日 · JavaScript · A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
     <item>
-      <title>DietrichGebert/ponytail</title>
-      <link>https://github.com/DietrichGebert/ponytail</link>
-      <guid isPermaLink='true'>https://github.com/DietrichGebert/ponytail</guid>
-      <description>+1,948 stars 今日 · JavaScript · Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote.</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
-    </item>
-    <item>
-      <title>Graphify-Labs/graphify</title>
-      <link>https://github.com/Graphify-Labs/graphify</link>
-      <guid isPermaLink='true'>https://github.com/Graphify-Labs/graphify</guid>
-      <description>+1,408 stars 今日 · Python · Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
-    </item>
-    <item>
-      <title>supabase/supabase</title>
-      <link>https://github.com/supabase/supabase</link>
-      <guid isPermaLink='true'>https://github.com/supabase/supabase</guid>
-      <description>+693 stars 今日 · TypeScript · The Postgres development platform. Supabase gives you a dedicated Postgres database to build your web, mobile, and AI applications.</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
-    </item>
-    <item>
-      <title>anthropics/knowledge-work-plugins</title>
-      <link>https://github.com/anthropics/knowledge-work-plugins</link>
-      <guid isPermaLink='true'>https://github.com/anthropics/knowledge-work-plugins</guid>
-      <description>+303 stars 今日 · Python · Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <title>NVIDIA/OpenShell</title>
+      <link>https://github.com/NVIDIA/OpenShell</link>
+      <guid isPermaLink='true'>https://github.com/NVIDIA/OpenShell</guid>
+      <description>+1,119 stars 今日 · Rust · OpenShell is the safe, private runtime for autonomous AI agents.</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
     <item>
       <title>php/php-src</title>
       <link>https://github.com/php/php-src</link>
       <guid isPermaLink='true'>https://github.com/php/php-src</guid>
-      <description>+287 stars 今日 · C · The PHP Interpreter</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <description>+716 stars 今日 · C · The PHP Interpreter</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
     <item>
-      <title>luongnv89/claude-howto</title>
-      <link>https://github.com/luongnv89/claude-howto</link>
-      <guid isPermaLink='true'>https://github.com/luongnv89/claude-howto</guid>
-      <description>+177 stars 今日 · Python · A visual, example-driven guide to Claude Code — from basic concepts to advanced agents, with copy-paste templates that bring immediate value.</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <title>anthropics/knowledge-work-plugins</title>
+      <link>https://github.com/anthropics/knowledge-work-plugins</link>
+      <guid isPermaLink='true'>https://github.com/anthropics/knowledge-work-plugins</guid>
+      <description>+635 stars 今日 · Python · Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
     <item>
-      <title>Meloong-Git/PCL</title>
-      <link>https://github.com/Meloong-Git/PCL</link>
-      <guid isPermaLink='true'>https://github.com/Meloong-Git/PCL</guid>
-      <description>+119 stars 今日 · Visual Basic .NET · Minecraft 启动器 Plain Craft Launcher（PCL）。</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <title>Renhuai123/ziwei-doushu</title>
+      <link>https://github.com/Renhuai123/ziwei-doushu</link>
+      <guid isPermaLink='true'>https://github.com/Renhuai123/ziwei-doushu</guid>
+      <description>+546 stars 今日 · TypeScript · 紫微斗数开源排盘引擎 — 基于倪海厦《天纪》体系，含完整排盘算法、四化系统、格局知识库、古籍原文数据</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
     <item>
-      <title>fastapi/fastapi</title>
-      <link>https://github.com/fastapi/fastapi</link>
-      <guid isPermaLink='true'>https://github.com/fastapi/fastapi</guid>
-      <description>+101 stars 今日 · Python · FastAPI framework, high performance, easy to learn, fast to code, ready for production</description>
-      <pubDate>Fri, 23 Oct 2026 04:15:24 +0000</pubDate>
+      <title>SnailSploit/Claude-Red</title>
+      <link>https://github.com/SnailSploit/Claude-Red</link>
+      <guid isPermaLink='true'>https://github.com/SnailSploit/Claude-Red</guid>
+      <description>+226 stars 今日 · Python · claude-red is a curated library of offensive security skills designed for the Claude skills system. Each skill is a structured SKILL.md file that primes Claude with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to exploit development.</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
+    </item>
+    <item>
+      <title>OpenBMB/VoxCPM</title>
+      <link>https://github.com/OpenBMB/VoxCPM</link>
+      <guid isPermaLink='true'>https://github.com/OpenBMB/VoxCPM</guid>
+      <description>+150 stars 今日 · Python · VoxCPM2: Tokenizer-Free TTS for Multilingual Speech Generation, Creative Voice Design, and True-to-Life Cloning</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
+    </item>
+    <item>
+      <title>nodejs/node</title>
+      <link>https://github.com/nodejs/node</link>
+      <guid isPermaLink='true'>https://github.com/nodejs/node</guid>
+      <description>+66 stars 今日 · JavaScript · Node.js JavaScript runtime ✨🐢🚀✨</description>
+      <pubDate>Sat, 24 Oct 2026 00:49:47 +0000</pubDate>
     </item>
   </channel>
 </rss>
