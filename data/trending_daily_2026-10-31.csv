@@ -1,0 +1,16 @@
+rank,full_name,language,stars,forks,period_stars,period,is_new,delta_stars,description,url
+1,thedotmack/claude-mem,TypeScript,106258,9354,1140,today,1,,"Persistent Context Across Sessions for Every Agent – Captures everything your agent does during sessions, compresses it with AI, and injects relevant context back into future sessions. Works with Claude Code, OpenClaw, Codex, Gemini, Hermes, Copilot, OpenCode + More",https://github.com/thedotmack/claude-mem
+2,milind-soni/OpenMausBot,TypeScript,8654,1200,895,today,1,,Open-source Grok Bot alternative with a virtual machine that bots can use,https://github.com/milind-soni/OpenMausBot
+3,pbakaus/impeccable,Rust,97071,5716,2300,today,1,,"The design vocabulary for your coding agent. Steer with polish and bolder, review with critique and audit, catch AI slop before it ships.",https://github.com/pbakaus/impeccable
+4,CopilotKit/OpenBot,TypeScript,8792,1109,706,today,1,,"Open-source AI coworkers that each get a computer of their own: a browser, files and tools, with every action decided before it happens and recorded after. Bring any AG-UI agent.",https://github.com/CopilotKit/OpenBot
+5,Renhuai123/ziwei-doushu,TypeScript,11208,2235,1126,today,0,4350,紫微斗数开源排盘引擎 — 基于倪海厦《天纪》体系，含完整排盘算法、四化系统、格局知识库、古籍原文数据,https://github.com/Renhuai123/ziwei-doushu
+6,expo/skills,Shell,3898,247,38,today,1,,A collection of AI agent skills for working with Expo projects and Expo Application Services,https://github.com/expo/skills
+7,macro-inc/macro,Rust,5876,537,57,today,1,,"Macro is a unified workspace for teams: email, chat, docs, tasks, agents, calls, and CRM — @-linked together with shared AI memory.",https://github.com/macro-inc/macro
+8,mattpocock/skills,Shell,307488,25883,876,today,1,,Skills for Real Engineers. Straight from my .agents directory.,https://github.com/mattpocock/skills
+9,pingdotgg/t3code,TypeScript,32740,8656,930,today,1,,,https://github.com/pingdotgg/t3code
+10,HKUDS/DeepTutor,Python,51777,6344,2282,today,1,,DeepTutor: Lifelong Personalized Tutoring. https://deeptutor.info/ .,https://github.com/HKUDS/DeepTutor
+11,anthropics/skills,Python,185324,21899,295,today,1,,Public repository for Agent Skills,https://github.com/anthropics/skills
+12,JetBrains/thinkrail,TypeScript,6582,358,722,today,1,,"Vibe code with pi in a lightweight, real IDE that customises itself around the way you work — The Vibe You Need",https://github.com/JetBrains/thinkrail
+13,togg53192-cmd/jailbreaks,,11020,1601,2055,today,1,,LIST OF ALL MY JAILBREAKS,https://github.com/togg53192-cmd/jailbreaks
+14,obra/superpowers,Shell,309436,27529,1259,today,1,,An agentic skills framework & software development methodology that works.,https://github.com/obra/superpowers
+15,lightpanda-io/browser,Zig,38382,1874,626,today,1,,Lightpanda: the headless browser designed for AI and automation,https://github.com/lightpanda-io/browser
